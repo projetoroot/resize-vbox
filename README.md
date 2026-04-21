@@ -179,7 +179,14 @@ sudo apt -f install
 ---
 #### Abrir o software
 No seu ambiente gráfico no linux clique no menu e pesquise por Resize, será exibido "Resize Disco VirtualBox"
-No shell do linux com seu usuário digite: resize-vbox
+
+OU 
+
+No shell do linux com seu usuário digite: 
+
+```bash
+resize-vbox
+```
 
 
 
