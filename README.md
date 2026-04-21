@@ -177,8 +177,3 @@ sudo dpkg -i resize-vbox_1.0.deb
 sudo apt -f install
 ```
 
----
-
-## 👤 Autor
-
-Diego Costa
