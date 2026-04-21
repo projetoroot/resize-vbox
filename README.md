@@ -176,4 +176,10 @@ wget https://github.com/projetoroot/resize-vbox/blob/main/resize-vbox_1.0.deb
 sudo dpkg -i resize-vbox_1.0.deb
 sudo apt -f install
 ```
+---
+#### Abrir o software
+No seu ambiente gráfico no linux clique no menu e pesquise por Resize, será exibido "Resize Disco VirtualBox"
+No shell do linux com seu usuário digite: resize-vbox
+
+
 
