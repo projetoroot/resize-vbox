@@ -162,10 +162,11 @@ resize-vbox/
 ## 🚀 Instalação
 
 ### Dependências
+Instalação do Virtualbox deve ser realizada antes, então faça como achar melhor para o seu sistema!
 
 ```bash
 sudo apt update
-sudo apt install virtualbox zenity
+sudo apt install zenity
 ```
 
 ### Instalar pacote
