@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Resize Disco VirtualBox
+Exec=resize-vbox
+Icon=drive-harddisk
+Type=Application
+Terminal=false
+Categories=System;

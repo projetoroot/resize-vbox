@@ -1,0 +1,9 @@
+Package: resize-vbox
+Version: 1.0
+Section: utils
+Priority: optional
+Architecture: all
+Depends: virtualbox, zenity
+Maintainer: Diego Costa - Projeto Root
+Description: Interface grafica para redimensionar discos do VirtualBox
+ Ferramenta simples para aumentar discos VDI/VMDK com interface Zenity.

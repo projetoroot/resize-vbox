@@ -1,0 +1,101 @@
+#!/bin/bash
+
+get_all_vdis() {
+    VM="$1"
+    VBoxManage showvminfo "$VM" --machinereadable | \
+    grep -E '^".*"\=' | \
+    cut -d'=' -f2 | tr -d '"' | \
+    grep -Ei '\.(vdi|vmdk)$'
+}
+
+get_disk_info() {
+    VDI="$1"
+
+    INFO=$(VBoxManage showmediuminfo "$VDI")
+
+    CAP_MB=$(echo "$INFO" | grep -i "Capacity:" | awk '{print $2}')
+    ACT_MB=$(echo "$INFO" | grep -i "Size on disk:" | awk '{print $4}')
+
+    CAP_GB=$((CAP_MB / 1024))
+    ACT_GB=$((ACT_MB / 1024))
+
+    echo "$CAP_GB|$ACT_GB"
+}
+
+VM_LIST=()
+
+while read -r line; do
+    VM_NAME=$(echo "$line" | awk -F\" '{print $2}')
+    VM_LIST+=("$VM_NAME")
+done < <(VBoxManage list vms)
+
+VM_SELECTED=$(zenity --list \
+    --title="Selecionar VM" \
+    --column="VM" \
+    "${VM_LIST[@]}" \
+    --width=400 --height=400)
+
+[ -z "$VM_SELECTED" ] && exit 0
+
+DISK_LIST=()
+
+VDIS=$(get_all_vdis "$VM_SELECTED")
+
+if [ -z "$VDIS" ]; then
+    zenity --error --text="Nenhum disco encontrado."
+    exit 1
+fi
+
+while read -r VDI; do
+    if [ -f "$VDI" ]; then
+        DATA=$(get_disk_info "$VDI")
+        CAP_GB=$(echo "$DATA" | cut -d'|' -f1)
+        ACT_GB=$(echo "$DATA" | cut -d'|' -f2)
+
+        DISK_LIST+=("$VDI" "${CAP_GB} GB" "${ACT_GB} GB")
+    fi
+done <<< "$VDIS"
+
+VDI_SELECTED=$(zenity --list \
+    --title="Discos da VM: $VM_SELECTED" \
+    --column="Caminho do Disco" \
+    --column="Provisionado" \
+    --column="Uso Real" \
+    "${DISK_LIST[@]}" \
+    --width=800 --height=400)
+
+[ -z "$VDI_SELECTED" ] && exit 0
+
+INFO=$(VBoxManage showmediuminfo "$VDI_SELECTED")
+CURRENT_MB=$(echo "$INFO" | grep -i "Capacity:" | awk '{print $2}')
+CURRENT_GB=$((CURRENT_MB / 1024))
+
+NEW_SIZE_GB=$(zenity --entry \
+    --title="Novo tamanho" \
+    --text="Disco:\n$VDI_SELECTED\n\nTamanho atual: ${CURRENT_GB} GB\nDigite o novo tamanho em GB:")
+
+if ! [[ "$NEW_SIZE_GB" =~ ^[0-9]+$ ]]; then
+    zenity --error --text="Valor inválido."
+    exit 1
+fi
+
+NEW_SIZE_MB=$((NEW_SIZE_GB * 1024))
+
+if [ "$NEW_SIZE_MB" -le "$CURRENT_MB" ]; then
+    zenity --error --text="O novo tamanho deve ser maior que o atual."
+    exit 1
+fi
+
+zenity --question \
+    --title="Confirmação" \
+    --text="Redimensionar:\n$VDI_SELECTED\n\nPara ${NEW_SIZE_GB} GB?"
+
+[ $? -ne 0 ] && exit 0
+
+VBoxManage modifymedium disk "$VDI_SELECTED" --resize "$NEW_SIZE_MB"
+
+if [ $? -eq 0 ]; then
+    zenity --info --text="Resize concluído.\nExpanda a partição dentro da VM."
+else
+    zenity --error --text="Erro ao redimensionar."
+fi
